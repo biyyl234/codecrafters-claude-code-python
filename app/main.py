@@ -1,6 +1,3 @@
-
-
-
 import argparse
 import os
 import sys
@@ -11,13 +8,13 @@ API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
 ENV = os.getenv("env")
 
-def main():
+def main():#main函数
     p = argparse.ArgumentParser()
     p.add_argument("-p", required=True)
     args = p.parse_args()
 
     if not API_KEY:
-        raise RuntimeError("OPENROUTER_API_KEY is not set")
+        raise RuntimeError("OPENROUTER_API_KEY is not set")#核验apikey
 
     client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
     # 全局对话历史，全程复用
@@ -42,7 +39,29 @@ def main():
                 "required": ["file_path"]
             }
         }
-    }]
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "Write",
+            "description": "Write content to a file",
+            "parameters": {
+                "type": "object",
+                 "required": ["file_path", "content"],
+                 "properties": {
+                     "file_path": {
+                         "type": "string",
+                         "description": "The path of the file to write to"
+                       },
+                      "content": {
+                            "type": "string",
+                       "description": "The content to write to the file"
+        }
+      }
+    }
+  }
+}
+    ]
 
     while True:
         # 修复：使用对话历史变量，不再写死
@@ -83,6 +102,30 @@ def main():
                     "name": tc.function.name,
                     "content": result,
                 })
+            if tc.function.name == "Write":
+                try:
+                    file_path = args_dict["file_path"]
+        # 取出模型传入的待写入内容
+                    content = args_dict["content"]
+        
+        # "w" 表示覆盖写入模式；文件不存在会自动创建，已存在会清空原有内容
+        # 指定 encoding="utf-8" 避免中文乱码
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        f.write(content)
+        
+        # 执行成功，返回结果给模型
+                    result = f"Successfully wrote to file: {file_path}"
+                except Exception as e:
+                                # 写入文件异常也要返回给模型，避免对话卡住
+                    result = f"Error writing file: {str(e)}"
+                            
+                            # 工具结果加入对话历史
+                messages.append({
+                                "role": "tool",
+                                "tool_call_id": tc.id,
+                                "name": tc.function.name,
+                                "content": result,
+                            })
 
     print("Logs from your program will appear here!", file=sys.stderr)
 
