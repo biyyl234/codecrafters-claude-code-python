@@ -6,7 +6,7 @@ import openai
 from openai import OpenAI
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
-BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
+BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")#配置LLM基本信息
 
 
 def main():
@@ -15,12 +15,12 @@ def main():
     args = p.parse_args()
 
     if not API_KEY:
-        raise RuntimeError("OPENROUTER_API_KEY is not set")
+        raise RuntimeError("OPENROUTER_API_KEY is not set")#检测apikey是否有效
 
     client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
     chat = client.chat.completions.create(
-        model="anthropic/claude-haiku-4.5",
+        model="anthropic/claude-haiku-4.5",#选择模型
         messages=[{"role": "user", "content": args.p}],
     )
 
@@ -34,5 +34,5 @@ def main():
     print(chat.choices[0].message.content)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":#运行主程序时走这个逻辑
     main()
