@@ -43,11 +43,11 @@ def main():
 
     if not chat.choices or len(chat.choices) == 0:
         raise RuntimeError("no choices in response")
-print(chat.choices[0].message.content)#作用是将模型生成的响应内容打印到标准输出
+
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
 
- #   print(chat.choices[0].message.content, 'abc')#作用是将模型生成的响应内容打印到标准输出
+    print(chat.choices[0].message.content)#作用是将模型生成的响应内容打印到标准输出
 #调用本地工具并返回给模型结果
     for tc in chat.choices[0].message.tool_calls or []:#功能调用
         args = json.loads(tc.function.arguments)#作用是将模型返回的参数字符串解析为字典
