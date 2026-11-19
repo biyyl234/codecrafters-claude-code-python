@@ -9,6 +9,7 @@ from openai import OpenAI
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")#配置LLM基本信息
 
+ENV = os.getenv("env")
 
 def main():
     p = argparse.ArgumentParser()
