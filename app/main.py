@@ -10,16 +10,31 @@ BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v
 ENV = os.getenv("env")
 
 def main():#main函数
-    p = argparse.ArgumentParser()
-    p.add_argument("-p", required=True)
-    args = p.parse_args()
+    p = argparse.ArgumentParser()#意思是创建一个ArgumentParser对象，用于解析命令行参数。ArgumentParser是argparse模块中的一个类，它提供了处理命令行参数的功能。
+    p.add_argument("-p", required=True)#意思是添加一个命令行参数-p，并且这个参数是必须的（required=True），也就是说在运行脚本时必须提供这个参数，否则会报错。
+    args = p.parse_args()#作用是解析命令行参数，并将解析结果存储在args对象中。args对象的属性对应于定义的命令行参数，这样你就可以通过args.p来访问-p参数的值。
 
     if not API_KEY:
         raise RuntimeError("OPENROUTER_API_KEY is not set")#核验apikey
 
     client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
     # 全局对话历史，全程复用
-    messages = [{"role": "user", "content": args.p}]
+#以下用来告知大模型skill信息
+    system_prompt = ""
+    skills_path = Path(".claude/skills/")
+    if skills_path.exists():
+        system_prompt += "You have access to the following skills:\n\n"
+        for skill in skills_path.iterdir():
+            skill_text = (skill / "SKILL.md").read_text()
+            system_prompt += "- " + ": ".join(
+                re.search(r"--\nname: (.*)\ndescription: (.*)\n--", skill_text).groups()#原理是使用正则表达式从SKILL.md文件中提取技能的名称和描述，并将其格式化为一个字符串，添加到system_prompt中。具体来说，re.search函数会在skill_text中查找匹配模式"--\nname: (.*)\ndescription: (.*)\n--"的内容，并返回一个匹配对象。然后，使用groups()方法获取匹配的组，即技能的名称和描述，并将它们用": "连接起来，最后添加到system_prompt字符串中。
+            )
+
+#以上用来告知大模型skill信息
+    messages = [
++  { "role": "system", "content": "You have access to the following skills:\n\n- apple: ..." },
+   { "role": "user", "content": args.p }
+ ]
     # 根据环境选择模型
     model_name = "anthropic/claude-haiku-4.5" if ENV != "local" else "openrouter/free"
 
