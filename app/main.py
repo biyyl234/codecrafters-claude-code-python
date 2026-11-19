@@ -4,6 +4,7 @@ import sys
 import json
 import subprocess
 import re
+import frontmatter
 from pathlib import Path
 from openai import OpenAI
 import asyncio
@@ -35,18 +36,29 @@ def main():#main函数
             )
 
 #以上用来告知大模型skill信息
-            async def main():
-                user_prompt = args.p  # 支持直接传入 "/技能名 具体需求" 格式
+            user_prompt = args.p
+system_prompt = advertised_skills()
+
+# 处理 / 开头的显式技能调用
+if user_prompt.startswith("/"):
+    # 拆分技能名和用户实际问题，最多拆一次
+    parts = user_prompt[1:].split(maxsplit=1)
+    skill_name = parts[0]
+    user_query = parts[1] if len(parts) > 1 else ""
     
-                options = ClaudeAgentOptions(
-        cwd=".",  # 项目根目录，SDK 会自动识别 .claude/skills 文件夹
-        allowed_tools=["Skill", "Read", "Write", "Bash"],  # 启用 Skill 工具
-    )
+    # 拼接路径并校验存在性
+    skill_md_path = Path(".claude/skills") / skill_name / "SKILL.md"
+    if not skill_md_path.exists():
+        print(f"错误：未找到技能 [{skill_name}]", file=sys.stderr)
+        sys.exit(1)
     
-    # SDK 自动处理技能识别、加载、工具调用完整闭环
-                async for event in query(prompt=user_prompt, options=options):
-                    if event.type == "message":
-                        print(event.content, end="")
+    # 解析技能，把完整指令追加到系统提示（给模型的操作指南）
+    metadata, skill_content = parse_skill_md(skill_md_path)
+    system_prompt += f"\n## 已激活技能：{metadata.get('name', skill_name)}\n{skill_content}\n"
+    
+    # 保留用户的真实问题作为 user_prompt
+    user_prompt = user_query
+
 #以上用来加载指定skill的正文部分
     messages = [
       { "role": "system", "content": "You have access to the following skills:" },
