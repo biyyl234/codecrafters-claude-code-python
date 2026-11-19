@@ -49,7 +49,7 @@ def main():
     abc = 1
     
     if chat.choices[0].message.content is not None:
-    print(chat.choices[0].message.content)
+         print(chat.choices[0].message.content)
 
 #调用本地工具并返回给模型结果
     for tc in chat.choices[0].message.tool_calls or []:#功能调用
