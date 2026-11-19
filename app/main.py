@@ -47,14 +47,14 @@ def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
     abc = 1
-    print(abc)#作用是将模型生成的响应内容打印到标准输出
+    
 #调用本地工具并返回给模型结果
     for tc in chat.choices[0].message.tool_calls or []:#功能调用
         args = json.loads(tc.function.arguments)#作用是将模型返回的参数字符串解析为字典
         if tc.function.name == "Read":#作用是判断模型调用的工具是否是Read
             with open(args["file_path"]) as f:#作用是根据模型提供的文件路径参数，打开指定的文件，并将文件对象赋值给变量f
                 print(f.read())#作用是将打开的文件内容读取出来，并打印到标准输出
-
+print(abc)#作用是将模型生成的响应内容打印到标准输出
 
 if __name__ == "__main__":#运行主程序时走这个逻辑
     main()
