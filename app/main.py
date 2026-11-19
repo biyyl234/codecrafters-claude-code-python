@@ -19,8 +19,11 @@ def main():
         raise RuntimeError("OPENROUTER_API_KEY is not set")#检测apikey是否有效
 
     client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
-
-    chat = client.chat.completions.create(
+    messages = [{"role": "user", "content": args.p}]
+    model = "anthropic/claude-haiku-4.5" if ENV != "local" else "openrouter/free"
+   
+    while True:
+     chat = client.chat.completions.create(
         model="anthropic/claude-haiku-4.5",#选择模型
         messages=[{"role": "user", "content": args.p}],
         tools=[{#告诉模型这里有工具可以使用，如果模型想要使用的话，会在response里面说的；同时因为要读文件了，所以对话流会随之终止
@@ -44,6 +47,42 @@ def main():
     if not chat.choices or len(chat.choices) == 0:
         raise RuntimeError("no choices in response")
 
+        response = chat.choices[0].message
+        response_message = chat.choices[0].message
+        message_dict = {
+            "role": response_message.role,
+            "content": response_message.content,
+        }
+        if hasattr(response_message, "tool_calls") and response_message.tool_calls:#这个if的功能是检查响应消息中是否存在工具调用（tool_calls）属性，并且该属性不
+            #为空。如果存在工具调用，说明模型在生成响应时决定使用
+            #某个工具（例如读取文件）。在这种情况下，程序会将这些工具调用的信息提取出来，并将其添加到消息字典中，以便后续处理。
+            message_dict["tool_calls"] = [
+                {
+                    "id": tc.id,
+                    "type": tc.type,
+                    "function": {
+                        "name": tc.function.name,
+                        "arguments": tc.function.arguments,
+                    },
+                }
+                for tc in response_message.tool_calls
+            ]
+        messages.append(message_dict)
+        if not message_dict.get("tool_calls"):
+            print(response.content)
+            break
+        for tc in response.tool_calls:
+            args = json.loads(tc.function.arguments)#作用是将模型返回的参数字符串解析为字典
+            if tc.function.name == "Read":#作用是判断模型调用的工具是否是Read
+                with open(args["file_path"]) as f:#作用是根据模型提供的文件路径参数，打开指定的文件，并将文件对象赋值给变量f
+                     result = f.read()#作用是将打开的文件内容读取出来，並存储在result变量中
+                     messages.append(#作用是将读取的文件内容作为工具调用的结果，添加到消息列表中，以便在后续的对话中使用，不断循环，直到模型不再调用工具为止
+                        {
+                            "role": "tool",
+                            "tool_call_id": tc.id,
+                            "content": result,
+                        }
+                    )
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
     abc = 1
@@ -52,12 +91,13 @@ def main():
          print(chat.choices[0].message.content)
 
 #调用本地工具并返回给模型结果
+'''
     for tc in chat.choices[0].message.tool_calls or []:#功能调用
         args = json.loads(tc.function.arguments)#作用是将模型返回的参数字符串解析为字典
         if tc.function.name == "Read":#作用是判断模型调用的工具是否是Read
             with open(args["file_path"]) as f:#作用是根据模型提供的文件路径参数，打开指定的文件，并将文件对象赋值给变量f
                 print(f.read())#作用是将打开的文件内容读取出来，并打印到标准输出
-    
+'''
 
 if __name__ == "__main__":#运行主程序时走这个逻辑
     main()
@@ -72,3 +112,5 @@ if __name__ == "__main__":#运行主程序时走这个逻辑
 # 2. 模型在生成响应时，可以选择调用 "Read" 工具来读取文件内容。
 # 3. 如果模型决定使用该工具，它会在响应中指示调用 "Read" 工具，并提供所需的参数（文件路径）。
 # 4. 你的程序可以根据模型的指示，实际执行文件读取操作
+
+#整个代码实现了一个循环对话系统，允许模型在生成响应时调用外部工具（如读取文件），并将工具的结果返回给模型，以便在后续的对话中使用。
