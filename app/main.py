@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import openai
 
 from openai import OpenAI
 
@@ -30,7 +31,7 @@ def main():
     print("Logs from your program will appear here!", file=sys.stderr)
 
     # TODO: Uncomment the following line to pass the first stage
-    # print(chat.choices[0].message.content)
+    print(chat.choices[0].message.content)
 
 
 if __name__ == "__main__":
