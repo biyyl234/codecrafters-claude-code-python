@@ -6,7 +6,7 @@ import subprocess
 import re
 from pathlib import Path
 from openai import OpenAI
-from app.skills import advertised_skills, parse_skill_md#这个库的作用是导入自定义模块app.skills中的advertised_skills和parse_skill_md函数，以便在当前脚本中使用这些函数。advertised_skills函数用于获取已注册的技能信息，而parse_skill_md函数用于解析技能的SKILL.md文件，从中提取技能的元数据和用户提示。
+from claude-skills import advertised_skills, parse_skill_md #这个库的作用是导入自定义模块app.skills中的advertised_skills和parse_skill_md函数，以便在当前脚本中使用这些函数。advertised_skills函数用于获取已注册的技能信息，而parse_skill_md函数用于解析技能的SKILL.md文件，从中提取技能的元数据和用户提示。
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
