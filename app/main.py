@@ -34,7 +34,7 @@ def main():#main函数
 
 #以上用来告知大模型skill信息
     messages = [
-+  { "role": "system", "content": "You have access to the following skills:\n\n- apple: ..." },
++  { "role": "system", "content": "You have access to the following skills:" },
    { "role": "user", "content": args.p }
  ]
     # 根据环境选择模型
