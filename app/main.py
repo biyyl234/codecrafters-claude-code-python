@@ -3,6 +3,8 @@ import os
 import sys
 import json
 import subprocess
+import re
+from pathlib import Path
 from openai import OpenAI
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
