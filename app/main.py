@@ -70,7 +70,7 @@ def main():
         messages.append(message_dict)
         if not message_dict.get("tool_calls"):
             print(response.content)
-            break
+        
         for tc in response.tool_calls:
             args = json.loads(tc.function.arguments)#作用是将模型返回的参数字符串解析为字典
             if tc.function.name == "Read":#作用是判断模型调用的工具是否是Read
