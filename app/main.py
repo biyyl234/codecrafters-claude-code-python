@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import openai#大模型库
+import json
 
 from openai import OpenAI
 
