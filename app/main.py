@@ -188,7 +188,15 @@ def main():
             f"\n## Activated skill: {metadata.get('name', skill_name)}\n"
             f"{skill_content}\n"
         )
-        user_prompt = user_query
+        # 关键修复：/skill 后面没有附加问题时，补一个非空占位内容，
+        # 否则 Anthropic 等 provider 会报 "messages: at least one message is required"
+        user_prompt = user_query or (
+            f"Follow the instructions of the activated skill '{skill_name}'."
+        )
+
+    # 兜底：任何情况下都不发送空 user 内容
+    if not str(user_prompt).strip():
+        user_prompt = "Continue."
 
     messages = [
         {"role": "system", "content": system_prompt},
