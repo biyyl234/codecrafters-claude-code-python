@@ -6,6 +6,7 @@ import subprocess
 import re
 from pathlib import Path
 from openai import OpenAI
+from app.skills import advertised_skills, parse_skill_md#这个库的作用是导入自定义模块app.skills中的advertised_skills和parse_skill_md函数，以便在当前脚本中使用这些函数。advertised_skills函数用于获取已注册的技能信息，而parse_skill_md函数用于解析技能的SKILL.md文件，从中提取技能的元数据和用户提示。
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
@@ -33,6 +34,13 @@ def main():#main函数
             )
 
 #以上用来告知大模型skill信息
+            user_prompt = args.p
+            system_prompt = advertised_skills()
+            if user_prompt.startswith("/"):
+                skill_name = user_prompt[1:].split(maxsplit=1)[0]#作用是从用户输入的命令中提取技能名称。具体来说，user_prompt[1:]表示去掉用户输入的第一个字符（即斜杠/），然后使用split(maxsplit=1)将剩余的字符串按空格分割成最多两部分。这样，skill_name就会被赋值为用户输入的技能名称，而剩余的部分（如果有的话）将被忽略。
+                skill_md_path = Path(".claude/skills") / skill_name / "SKILL.md"#作用是构建技能的SKILL.md文件的路径。具体来说，Path(".claude/skills")表示技能目录的路径，然后使用/运算符将技能名称和"SKILL.md"连接起来，形成完整的路径。最终，skill_md_path将指向指定技能的SKILL.md文件。
+                _, user_prompt = parse_skill_md(skill_md_path)#作用是解析指定技能的SKILL.md文件，并将解析结果赋值给两个变量。具体来说，parse_skill_md函数会读取skill_md_path指向的SKILL.md文件，并返回两个值：第一个值是技能的元数据（例如名称、描述等），第二个值是用户提示（user_prompt）。在这里，使用_, user_prompt = parse_skill_md(skill_md_path)表示忽略第一个返回值，只保留用户提示，并将其赋值给user_prompt变量。（skill）
+#以上用来加载指定skill的正文部分
     messages = [
       { "role": "system", "content": "You have access to the following skills:" },
        { "role": "user", "content": args.p }
