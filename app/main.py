@@ -40,6 +40,23 @@ def main():#main函数
             }
         }
     },
+        {
+  "type": "function",
+  "function": {
+    "name": "Bash",
+    "description": "Execute a shell command",
+    "parameters": {
+      "type": "object",
+      "required": ["command"],
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "The command to execute"
+        }
+      }
+        }
+  }
+},
     {
         "type": "function",
         "function": {
@@ -102,6 +119,38 @@ def main():#main函数
                     "name": tc.function.name,
                     "content": result,
                 })
+
+            if tc.function.name == "Bash":
+                try:
+                    command = args_dict["command"]
+        
+        # 执行 bash 命令，捕获输出、设置超时
+                    proc = subprocess.run(
+                        command,
+                        shell=True,          # 支持 bash 语法（管道、重定向等）
+                        capture_output=True, # 捕获 stdout 和 stderr
+                        text=True,           # 返回字符串而非字节
+                        encoding="utf-8",
+                        timeout=30           # 超时时间，单位秒，防止命令卡死
+                        )
+
+        # 组装返回结果，把退出码、标准输出、错误输出都返回给模型
+                    if proc.returncode == 0:
+                        result = f"[Exit code: 0] Command executed successfully\nOutput:\n{proc.stdout}"
+                    else:
+                        result = f"[Exit code: {proc.returncode}] Command failed\nSTDERR:\n{proc.stderr}\nSTDOUT:\n{proc.stdout}"
+
+                except subprocess.TimeoutExpired:
+                    result = f"Error: Command timed out after 30 seconds"
+                except Exception as e:
+                    result = f"Error executing command: {str(e)}"
+                messages.append({
+                                                "role": "tool",
+                                                "tool_call_id": tc.id,
+                                                "name": tc.function.name,
+                                                "content": result,
+                                            })
+                
             if tc.function.name == "Write":
                 try:
                     file_path = args_dict["file_path"]
@@ -126,6 +175,7 @@ def main():#main函数
                                 "name": tc.function.name,
                                 "content": result,
                             })
+                
 
     print("Logs from your program will appear here!", file=sys.stderr)
 
