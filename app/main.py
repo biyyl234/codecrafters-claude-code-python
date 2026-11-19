@@ -82,8 +82,9 @@ def main():
                             "role": "tool",
                             "tool_call_id": tc.id,
                             "content": result,
-                        }
+                        }break
                     )
+
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
     abc = 1
